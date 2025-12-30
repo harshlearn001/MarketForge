@@ -1,23 +1,33 @@
+# =====================
 # Python
+# =====================
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
 *.pyd
 
+# =====================
 # Environments
+# =====================
 .env
 .venv
 env/
 TradeSense/
 
-# Data (CRITICAL – do NOT push raw NSE data)
-data/raw/
-data/processed/
-data/master/
+# =====================
+# DATA (ABSOLUTELY IGNORE ALL DATA)
+# =====================
+data/
+!data/.gitkeep
 
+# =====================
 # Logs
+# =====================
 logs/
+*.log
 
+# =====================
 # OS / Editor
+# =====================
 .vscode/
 .DS_Store
+Thumbs.db
