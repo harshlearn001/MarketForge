@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environments
+.env
+.venv
+env/
+TradeSense/
+
+# Data (CRITICAL – do NOT push raw NSE data)
+data/raw/
+data/processed/
+data/master/
+
+# Logs
+logs/
+
+# OS / Editor
+.vscode/
+.DS_Store
