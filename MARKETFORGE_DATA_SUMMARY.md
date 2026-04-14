@@ -1,445 +1,343 @@
 # MarketForge Project Data Summary
 
 **Project Location**: `H:\MarketForge`  
-**Current Date**: February 19, 2026  
-**Last Updated**: February 18, 2026 (20:32)
+**Current Date**: April 14, 2026  
+**Last Updated**: April 14, 2026
 
 ---
 
-## 📊 Project Overview
+## Project Overview
 
-**MarketForge** is a production-grade market data engine for Indian NSE markets featuring:
-- Deterministic, reproducible data pipelines
-- Append-only master datasets (idempotent)
-- NSE-safe workflows
-- Multiple asset classes: Equities, Futures, Options, Indices
+**MarketForge** is a production-grade NSE market data engine for Indian markets with:
+- Deterministic downloader → cleaner → append pipelines
+- Append-only master datasets
+- Idempotent daily workflows
+- Incremental rerun protection for major daily steps
+- Coverage across equities, MTO delivery data, indices, futures, options, participant, and FII/DII activity
 
 ---
 
-## 🗂️ Data Inventory
+## Data Inventory
 
 ### Master Dataset Counts
-```
-Equity Masters (stocks):        2,531 files
-Indices Masters:                1 file
-Futures Masters:                0 files
-Options Masters:                0 files
+```text
+Equity Masters (stocks):        2,578 files
+Indices Masters:                   19 files
+Futures Masters:
+  FUTSTK:                         361 files
+  FUTIDX:                          13 files
+Options Masters:
+  STOCKS:                         293 files
+  INDICES:                          5 files
+Equity MTO Masters:               501 files
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TOTAL:                           2,532 files
+TOTAL MASTER CSV FILES:         3,770 files
+```
+
+### Other Active Masters
+```text
+Participant Master:                1 file
+FII/DII Master:                    1 file
 ```
 
 ### Master Directories
-```
+```text
 data/master/
-├── Equity_stock_master/        ← 2,531 symbol CSVs (ACTIVE)
-├── Futures_master/             ← 0 files (Not populated)
-├── Indices_master/             ← 1 file (NIFTY50/SENSEX)
-├── option_master/              ← 0 files (Not populated)
-└── EqiutyDat_master/           ← Legacy (typo in name)
+├── Equity_stock_master/        ← 2,578 symbol CSVs
+├── Indices_master/             ← 19 index CSVs
+├── Futures_master/
+│   ├── FUTSTK/                 ← 361 stock futures masters
+│   ├── FUTIDX/                 ← 13 index futures masters
+│   └── _state/                 ← Incremental append state
+├── option_master/
+│   ├── STOCKS/                 ← 293 stock options masters
+│   ├── INDICES/                ← 5 index options masters
+│   └── _state/                 ← Incremental append state
+├── EqiutyDat_master/           ← 501 symbol MTO masters (legacy folder still supported)
+├── participant/
+│   └── participant_master.csv
+└── fii_dii/
+    └── fii_dii_master.csv
 ```
 
-### Equity Masters Coverage
+---
 
-**2,531 Equity Stock Master Files** covering:
+## Current Coverage
 
-| Category | Count | Examples |
-|----------|-------|----------|
-| NIFTY500 (Primary) | ~500 | ADANIENT, INFY, TCS, RELIANCE, SBIN, HDFC... |
-| All Listed Stocks | ~2,000+ | Including micro-caps and penny stocks |
-| Data Range | Multiple years | Each file contains daily OHLCV history |
+### Equity Masters
+- **2,578 equity stock master files**
+- Example latest coverage:
+  - `INFY.csv` → `2026-04-13`
+  - `RELIANCE.csv` and other liquid names are up to the latest aligned market date
+- Sample files:
 
-**Sample Files** (First 20 alphabetically):
-```
-20MICRONS.csv          (0.00 MB)
-21STCENMGM.csv         (0.00 MB)
-360ONE.csv             (0.06 MB)
-3IINFOLTD.csv          (0.00 MB)
-3MINDIA.csv            (0.08 MB)
-AARTIIND.csv           (0.23 MB)  ← Larger files = longer history
+```text
+20MICRONS.csv      (0.01 MB)
+21STCENMGM.csv     (0.01 MB)
+360ONE.csv         (0.07 MB)
+3IINFOLTD.csv      (0.01 MB)
+3MINDIA.csv        (0.08 MB)
+3PLAND.csv         (0.01 MB)
+5PAISA.csv         (0.01 MB)
+63MOONS.csv        (0.01 MB)
+A2ZINFRA.csv       (0.00 MB)
+AAATECH.csv        (0.00 MB)
 ...
-[2,531 total]
+```
+
+### Indices Masters
+- **19 index master files**
+- Examples present:
+  - `NIFTY.csv`
+  - `BANKNIFTY.csv`
+  - `FINNIFTY.csv`
+  - `NIFTY100.csv`
+  - `NIFTY200.csv`
+  - `NIFTY500.csv`
+  - `NIFTYIT.csv`
+  - `NIFTYFMCG.csv`
+  - `NIFTYALPHA50.csv`
+  - `NIFTYLOWVOL50.csv`
+- Example latest coverage:
+  - `NIFTY.csv` → `TRADE_DATE=20260413`
+
+### Futures Masters
+- **361 stock futures masters** in `FUTSTK/`
+- **13 index futures masters** in `FUTIDX/`
+- Example latest coverage:
+  - `FUTSTK/RELIANCE.csv` → `TRADE_DATE=20260413`
+  - `FUTIDX/NIFTY.csv` → `TRADE_DATE=20260413`
+
+### Options Masters
+- **293 stock options masters** in `STOCKS/`
+- **5 index options masters** in `INDICES/`
+- Example latest coverage:
+  - `STOCKS/RELIANCE.csv` → `TRADE_DATE=20260413`
+  - `INDICES/NIFTY.csv` → `TRADE_DATE=20260413`
+
+### MTO / Delivery Masters
+- **501 symbol delivery masters** in `EqiutyDat_master/`
+- Example latest coverage:
+  - `EqiutyDat_master/RELIANCE.csv` → `TRADE_DATE=20260413`
+
+### Institutional and Participant Data
+- `participant_master.csv` latest date: `2026-04-13`
+- `fii_dii_master.csv` latest date: `2026-04-13`
+
+---
+
+## Directory Structure
+
+```text
+H:\MarketForge\
+│
+├── data/
+│   ├── raw/                        # Downloaded source files
+│   │   ├── equity/
+│   │   ├── futures/
+│   │   ├── equityDat/
+│   │   ├── indices/
+│   │   ├── fii_dii/
+│   │   └── participant/
+│   │
+│   ├── processed/                  # Cleaned daily outputs
+│   │   ├── equity_daily/
+│   │   ├── futures_daily/
+│   │   ├── options_daily/
+│   │   ├── equityDat_daily/
+│   │   ├── indices_daily/
+│   │   ├── participant/
+│   │   └── fii_dii/
+│   │
+│   ├── master/                     # Production masters
+│   │   ├── Equity_stock_master/
+│   │   ├── Futures_master/
+│   │   ├── Indices_master/
+│   │   ├── option_master/
+│   │   ├── EqiutyDat_master/
+│   │   ├── participant/
+│   │   └── fii_dii/
+│   │
+│   └── unzip_daily/
+│       ├── equity_daily_unzip/     # Canonical unzip path
+│       ├── equty_daily_unzip/      # Legacy-compatible path
+│       └── future_daily_unzip/
+│
+├── scripts/
+│   ├── downloader/
+│   ├── cleaner/
+│   ├── append/
+│   ├── master_merge/
+│   ├── 99_check_master_last_rows.py
+│   └── daily_run_equity.ps1
+│
+├── config/
+├── ARCHITECTURE.md
+├── README.md
+├── requirements.txt
+└── MARKETFORGE_DATA_SUMMARY.md
 ```
 
 ---
 
-## 📁 Directory Structure
+## Pipeline Flow
 
-```
-H:\MarketForge/
-│
-├── 📁 data/                           ← Data storage
-│   ├── 📁 raw/                        # Downloaded raw data (large, ignored by git)
-│   │   └── 📁 equity/                 # Downloaded bhavcopy ZIPs
-│   │
-│   ├── 📁 processed/                  # Cleaned daily data
-│   │   └── 📁 equity_daily/           # Cleaned CSV files (temporary)
-│   │
-│   ├── 📁 master/                     # MASTER DATASETS (PRODUCTION)
-│   │   ├── 📁 Equity_stock_master/    # ⭐ 2,531 symbol CSVs
-│   │   ├── 📁 Indices_master/         # NIFTY indices
-│   │   ├── 📁 Futures_master/         # (Empty)
-│   │   ├── 📁 option_master/          # (Empty)
-│   │   └── 📁 EqiutyDat_master/       # Legacy
-│   │
-│   ├── 📁 unzip_daily/                # Unzipped bhavcopy daily
-│   ├── 📁 reports/                    # Analysis reports
-│   ├── 📄 nifty_500_symbols.csv       # ⭐ SYMBOL MAPPING (503 lines)
-│   └── 📄 .gitkeep
-│
-├── 📁 scripts/                        ← Data pipeline scripts
-│   ├── 📁 downloader/                 # Step 1: NSE downloads
-│   │   ├── 01_download_cm_bhavcopy_auto.py
-│   │   ├── 01_download_fo_zip_auto.py
-│   │   ├── 01_download_indices_ohlc_auto.py
-│   │   ├── 01_download_mto_dat_auto.py
-│   │   └── [manual versions + utilities]
-│   │
-│   ├── 📁 cleaner/                    # Step 2: Normalize data
-│   │   ├── 02_unzip_cm_bhavcopy_auto.py
-│   │   ├── 03_clean_cm_bhavcopy_daily_auto.py
-│   │   ├── 03_clean_futures_daily.py
-│   │   ├── 03_clean_indices_ohlc.py
-│   │   └── [more cleaners]
-│   │
-│   ├── 📁 append/                     # Step 3: Merge into masters
-│   │   ├── 04_append_equity_stock_master.py
-│   │   ├── 04_append_equity_mto_master.py
-│   │   ├── 04_append_futures_master.py
-│   │   ├── 04_append_indices_ohlc_master.py
-│   │   └── 04_append_options_master.py
-│   │
-│   ├── 📁 utils/                      # Helper functions
-│   ├── 📁 validator/                  # Data validation
-│   ├── 📁 master_merge/               # Master merging utilities
-│   ├── 📄 99_check_master_last_rows.py   # Inspection utility
-│   └── 📄 daily_run_equity.ps1         # PowerShell scheduler
-│
-├── 📁 config/                         ← Configuration
-│   ├── 📄 settings.py                 # Global settings
-│   ├── 📄 symbols.py                  # Symbol configurations
-│   └── 📄 holidays.py                 # Trading holidays
-│
-├── 📁 logs/                           ← Execution logs (ignored)
-├── 📁 reports/                        ← Analysis reports
-│
-├── 📄 README.md                       ← Project description
-├── 📄 ARCHITECTURE.md                 ← System design
-├── 📄 requirements.txt                ← Dependencies
-└── 📄 .gitignore                      # Git exclusions
-```
-
----
-
-## 📈 Data Pipeline Flow
-
-```
+```text
 Step 1: DOWNLOAD
-  └─ NSE Website
-     └─ Bhavcopy ZIP files (CM, FO, Indices, MTO)
-     └─ Saved to: data/raw/
+  └─ NSE archive / API endpoints
+     └─ CM bhavcopy ZIP
+     └─ FO ZIP
+     └─ MTO DAT
+     └─ Indices OHLC
+     └─ FII/DII activity
+     └─ Participant data
 
-Step 2: CLEANER
-  └─ Unzip files
-  └─ Normalize schema (handle old/new NSE formats)
-  └─ Filter to NIFTY stocks (Series = EQ)
-  └─ Output: data/processed/equity_daily/*.csv
+Step 2: CLEAN
+  └─ Unzip CM / FO archives
+  └─ Normalize NSE schema variants
+  └─ Split futures/options by segment
+  └─ Standardize date and numeric fields
+  └─ Write processed daily CSVs
 
 Step 3: APPEND
-  └─ Load cleaned daily data
-  └─ Per-symbol master files (data/master/Equity_stock_master/)
-  └─ Append new dates (deduplicated, idempotent)
-  └─ Output: {SYMBOL}.csv
+  └─ Build or extend master CSVs
+  └─ Deduplicate by date/contract keys
+  └─ Preserve append-only historical datasets
 
-Result: MASTER DATASETS
-  └─ Each symbol has complete daily OHLCV history
-  └─ Ready for: Backtesting, ML, Analytics
+Result
+  └─ Symbol-wise and index-wise master datasets
+  └─ Ready for analytics, ML, screening, and backtesting
 ```
 
 ---
 
-## 📋 Equity Master File Format
+## Pipeline Status As Of April 14, 2026
 
-Each CSV file (e.g., `INFY.csv`, `TCS.csv`) contains:
+### Daily Alignment
+- The daily pipeline is currently aligned to the latest fully published market date across CM, FO, and MTO.
+- On April 14, 2026 evening runs, the aligned market date was **April 13, 2026** because April 14 FO and MTO files were not yet published.
+- Index processing now respects this alignment and no longer runs ahead of the rest of the market data.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| DATE | DATETIME | Trading date (YYYY-MM-DD or normalized) |
-| SYMBOL | STRING | Stock symbol (e.g., "INFY") |
-| SERIES | STRING | Always "EQ" (cash market equity) |
-| OPEN | FLOAT | Opening price |
-| HIGH | FLOAT | Day's high |
-| LOW | FLOAT | Day's low |
-| CLOSE | FLOAT | Closing price |
-| LAST | FLOAT | Last traded price |
-| PREVCLOSE | FLOAT | Previous closing price |
-| TOTTRDQTY | FLOAT | Total traded quantity (volume) |
-| TOTTRDVAL | FLOAT | Total trading value (turnover) |
-| TOTALTRADES | INT | Total number of trades |
-| ISIN | STRING | ISIN code (unique security identifier) |
+### Incremental Rerun Behavior
+- The following steps now skip already-processed daily files:
+  - `03_clean_cm_bhavcopy_daily_auto.py`
+  - `03_clean_futures_daily.py`
+  - `03_clean_options_daily.py`
+  - `03_clean_mto_daily.py`
+- The following master appenders now track processed daily inputs and skip repeat appends:
+  - `04_append_equity_stock_master.py`
+  - `04_append_futures_master.py`
+  - `04_append_options_master.py`
+  - `04_append_indices_ohlc_master.py`
 
-**Example Row**:
-```
-2026-02-18,INFY,EQ,1685.0,1695.5,1680.0,1690.0,1690.0,1682.0,5000000,8450000000,50000,INE009A01021
-```
+### State Files
+```text
+data/master/Equity_stock_master/_state/
+  processed_equity_files.txt
 
----
+data/master/Indices_master/_state/
+  processed_index_clean_files.txt
 
-## 🔍 Key Data Points
+data/master/Futures_master/_state/
+  processed_futstk_files.txt
+  processed_futidx_files.txt
 
-### Coverage
-- **Symbols**: 2,531 (all NSE-listed equities)
-- **Primary Universe**: NIFTY500 (500 most liquid)
-- **NIFTY50**: Subset of largest market-cap stocks
-
-### NIFTY500 Sample Stocks
-```
-AARTIIND          (Chemicals)
-ADANIENT          (Metals & Mining)
-AXISBANK          (Financial Services)
-BHARTIARTL        (Telecom)
-HDFC              (Banking)
-INFY              (IT)
-MARUTI            (Auto)
-RELIANCE          (Oil & Gas)
-TCS               (IT)
-WIPRO             (IT)
-[500 total]
-```
-
-### File Sizes
-- **Large**: 0.20+ MB (AARTIIND.csv = 0.23 MB = ~5+ years of data)
-- **Small**: 0.00 MB (newer IPOs or low activity stocks)
-- **Total**: ~500+ MB for all 2,531 stocks
-
-### Data Freshness
-- **Last Updated**: February 18, 2026, 20:32
-- **Coverage**: Likely through February 2026 (current month)
-
----
-
-## 🔧 Pipeline Scripts Summary
-
-### 1️⃣ Downloaders (scripts/downloader/)
-**Purpose**: Fetch raw data from NSE
-
-- **01_download_cm_bhavcopy_auto.py** ← ACTIVE
-  - Downloads daily Equity (CM - Cashmarket) Bhavcopy
-  - Uses NSE archives (stable endpoint)
-  - Tries today, backtracks if not published
-  - Saves as: `BhavCopy_NSE_CM_0_0_0_YYYYMMDD_F_0000.csv.zip`
-
-- **01_download_fo_zip_auto.py**
-  - Downloads Futures & Options data
-  
-- **01_download_indices_ohlc_auto.py**
-  - Downloads NIFTY50, SENSEX indices
-
-- **01_download_mto_dat_auto.py**
-  - MTO (Market Turn Over) data
-
-### 2️⃣ Cleaners (scripts/cleaner/)
-**Purpose**: Normalize and validate data
-
-- **02_unzip_cm_bhavcopy_auto.py**
-  - Unzips downloaded equity bhavcopy
-  - Extracts CSV from ZIP
-  
-- **03_clean_cm_bhavcopy_daily_auto.py** ← CORE
-  - Filters to EQ (equity) only
-  - Handles old/new NSE schema formats
-  - Normalizes columns
-  - Outputs: `BhavCopy_NSE_CM_*.csv`
-
-- **03_clean_futures_daily.py**
-  - Cleans futures data
-
-- **03_clean_indices_ohlc.py**
-  - Cleans index OHLC
-
-### 3️⃣ Append (scripts/append/)
-**Purpose**: Build/update master datasets
-
-- **04_append_equity_stock_master.py** ← CORE
-  - Reads cleaned equity CSV
-  - Creates per-symbol CSV files
-  - Appends new dates (prevents duplicates)
-  - Output: `Equity_stock_master/{SYMBOL}.csv`
-
-- **04_append_futures_master.py**
-  - Futures master builder (currently empty)
-
-- **04_append_indices_ohlc_master.py**
-  - Indices master builder
-
-### 4️⃣ Utilities
-- **99_check_master_last_rows.py**
-  - Inspection utility (show last rows of master files)
-
-- **daily_run_equity.ps1**
-  - PowerShell scheduler for daily runs
-
----
-
-## 🔌 Configuration Files
-
-### config/settings.py
-```python
-# Global project settings
-# (Currently minimal - expand as needed)
-```
-
-### config/symbols.py
-```python
-# NSE symbols configuration
-# Maps symbol codes to metadata
-```
-
-### config/holidays.py
-```python
-# Trading holidays calendar
-# Prevents downloads on non-trading days
-```
-
-### data/nifty_500_symbols.csv
-```csv
-Company Name,Industry,Symbol,Series,ISIN Code
-[503 rows covering NIFTY500]
-
-Example:
-360 ONE WAM Ltd.,Financial Services,360ONE,EQ,INE466L01038
-3M India Ltd.,Diversified,3MINDIA,EQ,INE470A01017
-Abbott India Ltd.,Healthcare,ABBOTINDIA,EQ,INE358A01014
-...
+data/master/option_master/_state/
+  processed_stocks_files.txt
+  processed_indices_files.txt
 ```
 
 ---
 
-## 💾 Storage & Performance
+## Key Scripts
 
-### Master Storage
-- **Total files**: 2,532
-- **Estimated size**: 500-1000 MB (combined)
-- **Format**: CSV only (parquet removed per policy)
-- **Location**: `data/master/Equity_stock_master/`
+### Downloaders
+- `scripts/downloader/01_download_cm_bhavcopy_auto.py`
+- `scripts/downloader/01_download_fo_zip_auto.py`
+- `scripts/downloader/01_download_mto_dat_auto.py`
+- `scripts/downloader/01_download_indices_ohlc_auto.py`
+- `scripts/downloader/01_download_fii_dii_activity.py`
+- `scripts/downloader/01_download_participant_data.py`
 
-### Data Retention
-- **Append-only**: Never deletes rows
-- **Idempotent**: Safe to run multiple times
-- **Deduplication**: Prevents duplicate dates per symbol
+### Cleaners
+- `scripts/cleaner/02_unzip_cm_bhavcopy_auto.py`
+- `scripts/cleaner/02_unzip_fo_daily.py`
+- `scripts/cleaner/03_clean_cm_bhavcopy_daily_auto.py`
+- `scripts/cleaner/03_clean_futures_daily.py`
+- `scripts/cleaner/03_clean_options_daily.py`
+- `scripts/cleaner/03_clean_mto_daily.py`
+- `scripts/cleaner/03_clean_indices_ohlc.py`
+- `scripts/cleaner/03_clean_fii_dii_daily.py`
+- `scripts/cleaner/03_clean_participant_daily.py`
+
+### Master Builders / Appenders
+- `scripts/append/04_append_equity_stock_master.py`
+- `scripts/append/04_append_equity_mto_master.py`
+- `scripts/append/04_append_futures_master.py`
+- `scripts/append/04_append_options_master.py`
+- `scripts/append/04_append_indices_ohlc_master.py`
+- `scripts/append/04_append_fii_dii_master.py`
+- `scripts/append/04_append_participant_master.py`
+
+### Utilities
+- `scripts/99_check_master_last_rows.py`
+- `scripts/daily_run_equity.ps1`
 
 ---
 
-## 📚 Key Principles (from ARCHITECTURE.md)
+## Data Quality Notes
 
-✅ **Deterministic**
-- Code-only repository
-- Data is reproducible, never versioned
+### Strengths
+- Append-only master design
+- Deduplication built into appenders
+- Stable archive usage for CM, FO, and MTO
+- Aligned market-date handling for index data
+- Incremental rerun protection across most major daily stages
 
-✅ **Append-only Masters**
-- Historical datasets always grow
-- No overwrites or deletions
-
-✅ **NSE-proof**
-- Handles NSE format changes
-- Holiday & delay safe
-- Production locked
-
-✅ **Auditable**
-- Clear pipeline stages
-- Per-stage outputs saved
-- Inspection utilities provided
+### Known Legacy Quirks
+- Legacy folder typos may still exist on disk:
+  - `data/master/EqiutyDat_master`
+  - `data/unzip_daily/equty_daily_unzip`
+- Newer code prefers canonical names where possible:
+  - `data/master/EquityDat_master`
+  - `data/unzip_daily/equity_daily_unzip`
+- Some older documentation assumed futures/options were empty; that is no longer true.
+- A few master-building scripts still keep historical naming/layout decisions for compatibility.
 
 ---
 
-## 🚀 Usage Examples
+## Usage Examples
 
-### Check Latest Equity Data
-```bash
-# View last few rows of INFY master
-python scripts/99_check_master_last_rows.py INFY
-```
-
-### Run Daily Pipeline (Manual)
-```bash
-# Download
-python scripts/downloader/01_download_cm_bhavcopy_auto.py
-
-# Unzip
-python scripts/cleaner/02_unzip_cm_bhavcopy_auto.py
-
-# Clean
-python scripts/cleaner/03_clean_cm_bhavcopy_daily_auto.py
-
-# Append to masters
-python scripts/append/04_append_equity_stock_master.py
-```
-
-### Scheduled Daily Run (PowerShell)
-```bash
-# Runs entire equity pipeline daily
+### Run the Daily Pipeline
+```powershell
 .\scripts\daily_run_equity.ps1
 ```
 
----
-
-## 📊 Data Quality Notes
-
-### Coverage
-✅ NIFTY500: Complete historical data  
-✅ Extended universe: 2,000+ additional stocks  
-✅ Indices: NIFTY50, Nifty500, SENSEX available  
-❌ Futures: Pipeline ready, but not populated yet  
-❌ Options: Pipeline ready, but not populated yet  
-
-### Freshness
-- **Updated**: Daily via NSE download
-- **Lag**: 1-2 hours after market close
-- **Reliability**: NSE uses stable archive endpoints
-
-### Format
-- **Schema**: Standardized across all symbols
-- **Dates**: Normalized (trading days only)
-- **Types**: Float (OHLCV), String (metadata)
-- **Deduplication**: Per-symbol, per-date enforcement
-
----
-
-## 🔗 Integration Points
-
-### For MarketMatrix
-Could import cleaned equity data to:
-- Feature engineering (technical indicators)
-- Model training (price prediction)
-- Signal generation (buy/sell)
-- Backtesting (historical analysis)
-
-### Data Bridge
+### Inspect Master Files
+```powershell
+python scripts/99_check_master_last_rows.py
 ```
-MarketForge Masters (2,531 symbols)
-        ↓
-MarketMatrix Feature Building
-        ↓
-ML Models → Predictions → Trade Signals
+
+### Run Individual Stages
+```powershell
+python scripts/downloader/01_download_cm_bhavcopy_auto.py
+python scripts/cleaner/02_unzip_cm_bhavcopy_auto.py
+python scripts/cleaner/03_clean_cm_bhavcopy_daily_auto.py
+python scripts/append/04_append_equity_stock_master.py
 ```
 
 ---
 
-## 📝 Summary
+## Summary
 
-**MarketForge** is a **mature, production-grade data engine** with:
-- ✅ 2,531 equity stock histories (ready to use)
-- ✅ Clean, deterministic pipeline
-- ✅ Daily NSE data ingestion
-- ✅ Scheduler-ready architecture
-- ✅ Zero data loss (append-only)
+**MarketForge** is now a broader and more mature data engine than this file previously described:
+- **2,578** equity masters
+- **19** index masters
+- **374** futures masters
+- **298** options masters
+- **501** MTO masters
+- Participant and FII/DII masters active
+- Daily pipeline stabilized around aligned market dates
+- Incremental reruns in place for the main heavy steps
 
-**Next Steps**:
-1. Connect MarketMatrix to MarketForge equity data
-2. Use latest NIFTY stock prices for features
-3. Train & predict with fresh daily data
-
----
-
-**Generated**: February 19, 2026  
-**Data Source**: NSE (National Stock Exchange of India)  
-**License**: Internal Research Use
+The repository is operational for daily NSE market ingestion and significantly closer to a scheduler-friendly production workflow than the earlier February 2026 snapshot suggested.

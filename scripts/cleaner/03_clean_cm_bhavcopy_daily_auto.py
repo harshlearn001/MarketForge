@@ -18,11 +18,12 @@ import pandas as pd
 # =================================================
 ROOT = Path(__file__).resolve().parents[2]
 
-SRC_DIR = ROOT / "data" / "unzip_daily" / "equty_daily_unzip"
+SRC_CANDIDATES = [
+    ROOT / "data" / "unzip_daily" / "equity_daily_unzip",
+    ROOT / "data" / "unzip_daily" / "equty_daily_unzip",
+]
 OUT_DIR = ROOT / "data" / "processed" / "equity_daily"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
-
-print(f"Scanning source dir : {SRC_DIR}")
 
 # =================================================
 # STANDARD OUTPUT SCHEMA
@@ -79,6 +80,13 @@ COL_MAP = {
 # =================================================
 # DISCOVER FILES
 # =================================================
+SRC_DIR = next(
+    (p for p in SRC_CANDIDATES if list(p.glob("BhavCopy_NSE_CM*.csv"))),
+    SRC_CANDIDATES[0],
+)
+
+print(f"Scanning source dir : {SRC_DIR}")
+
 files = list(SRC_DIR.glob("BhavCopy_NSE_CM*.csv"))
 print(f"Found {len(files)} equity CSV files")
 
@@ -90,6 +98,11 @@ if not files:
 # =================================================
 for file in files:
     print(f"\nCleaning: {file.name}")
+
+    out_file = OUT_DIR / file.name
+    if out_file.exists():
+        print(f" Already cleaned, skipping → {out_file.name}")
+        continue
 
     df = pd.read_csv(file, low_memory=False)
 
@@ -176,7 +189,6 @@ for file in files:
     # ---------------------------------
     df = df.sort_values("DATE")
 
-    out_file = OUT_DIR / file.name
     df.to_csv(out_file, index=False)
 
     print(f"Saved EQ-only standardized file → {out_file}")

@@ -60,6 +60,13 @@ trade_date_int = int(
     datetime.strptime(m.group(1), "%d%m%Y").strftime("%Y%m%d")
 )
 
+out_csv = OUT_DIR / f"mto_{trade_date_int}.csv"
+out_parquet = OUT_DIR / f"mto_{trade_date_int}.parquet"
+
+if out_csv.exists() and out_parquet.exists():
+    print(f" Already cleaned, skipping → {out_csv.name}")
+    sys.exit(0)
+
 # ==================================================
 # READ FILE (BINARY SAFE)
 # ==================================================
@@ -163,9 +170,6 @@ df = df[FINAL_COLS]
 # ==================================================
 # SAVE OUTPUT
 # ==================================================
-out_csv = OUT_DIR / f"mto_{trade_date_int}.csv"
-out_parquet = OUT_DIR / f"mto_{trade_date_int}.parquet"
-
 df.to_csv(out_csv, index=False)
 df.to_parquet(out_parquet, index=False)
 

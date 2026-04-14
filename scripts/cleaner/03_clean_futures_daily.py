@@ -236,14 +236,22 @@ for file in files:
     futstk = fut[fut["INSTRUMENT"].str.startswith("FUTSTK")]
     futidx = fut[fut["INSTRUMENT"].str.startswith("FUTIDX")]
 
-    if not futstk.empty:
-        out = OUT_FUT_STK / f"futstk{tag}.csv"
-        futstk.sort_values(["SYMBOL", "EXP_DATE"]).to_csv(out, index=False)
-        print(f" Saved → {out}")
+    out_stk = OUT_FUT_STK / f"futstk{tag}.csv"
+    out_idx = OUT_FUT_IDX / f"futidx{tag}.csv"
 
-    if not futidx.empty:
-        out = OUT_FUT_IDX / f"futidx{tag}.csv"
-        futidx.sort_values(["SYMBOL", "EXP_DATE"]).to_csv(out, index=False)
-        print(f" Saved → {out}")
+    need_stk = not futstk.empty and not out_stk.exists()
+    need_idx = not futidx.empty and not out_idx.exists()
+
+    if not need_stk and not need_idx:
+        print(" Already cleaned for this trade date — skipped")
+        continue
+
+    if need_stk:
+        futstk.sort_values(["SYMBOL", "EXP_DATE"]).to_csv(out_stk, index=False)
+        print(f" Saved → {out_stk}")
+
+    if need_idx:
+        futidx.sort_values(["SYMBOL", "EXP_DATE"]).to_csv(out_idx, index=False)
+        print(f" Saved → {out_idx}")
 
 print("\n FUTURES DAILY SPLIT COMPLETED (LOCKED, STANDARD & ZERO WARNINGS)")

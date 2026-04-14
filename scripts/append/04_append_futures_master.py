@@ -23,12 +23,14 @@ ROOT = Path(r"H:\MarketForge")
 
 DAILY_ROOT = ROOT / "data" / "processed" / "futures_daily"
 MASTER_ROOT = ROOT / "data" / "master" / "Futures_master"
+STATE_DIR = MASTER_ROOT / "_state"
 
 STOCK_MASTER = MASTER_ROOT / "FUTSTK"
 INDEX_MASTER = MASTER_ROOT / "FUTIDX"
 
 STOCK_MASTER.mkdir(parents=True, exist_ok=True)
 INDEX_MASTER.mkdir(parents=True, exist_ok=True)
+STATE_DIR.mkdir(parents=True, exist_ok=True)
 
 # ==================================================
 # COLUMN MAP (REAL NSE VARIANTS)
@@ -50,6 +52,27 @@ FINAL_COLS = [
     "NO_OF_TRADE",
     "TRADE_DATE",
 ]
+
+STOCK_STATE = STATE_DIR / "processed_futstk_files.txt"
+INDEX_STATE = STATE_DIR / "processed_futidx_files.txt"
+
+
+def load_processed(state_file: Path) -> set[str]:
+    if not state_file.exists():
+        return set()
+
+    return {
+        line.strip()
+        for line in state_file.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    }
+
+
+def save_processed(state_file: Path, processed: set[str]) -> None:
+    state_file.write_text(
+        "\n".join(sorted(processed)) + ("\n" if processed else ""),
+        encoding="utf-8",
+    )
 
 # ==================================================
 # APPEND FUNCTION
@@ -137,12 +160,32 @@ def append_futures(daily_file: Path, out_dir: Path):
 # RUN
 # ==================================================
 print("\nProcessing STOCK FUTURES")
+processed_stock = load_processed(STOCK_STATE)
+stock_updated = False
 for f in sorted((DAILY_ROOT / "STOCKS").glob("futstk*.csv")):
+    if f.name in processed_stock:
+        print(f"  → Skipping already appended {f.name}")
+        continue
     append_futures(f, STOCK_MASTER)
+    processed_stock.add(f.name)
+    stock_updated = True
+
+if stock_updated:
+    save_processed(STOCK_STATE, processed_stock)
 
 print("\nProcessing INDEX FUTURES")
+processed_index = load_processed(INDEX_STATE)
+index_updated = False
 for f in sorted((DAILY_ROOT / "INDICES").glob("futidx*.csv")):
+    if f.name in processed_index:
+        print(f"  → Skipping already appended {f.name}")
+        continue
     append_futures(f, INDEX_MASTER)
+    processed_index.add(f.name)
+    index_updated = True
+
+if index_updated:
+    save_processed(INDEX_STATE, processed_index)
 
 print("\n FUTURES MASTER APPEND COMPLETED (LOCKED, ZERO WARNINGS)")
 print(f" FUTSTK → {STOCK_MASTER}")

@@ -22,6 +22,7 @@ ROOT = Path(r"H:\MarketForge")
 
 SRC_ROOT = ROOT / "data" / "processed" / "options_daily"
 OUT_ROOT = ROOT / "data" / "master" / "option_master"
+STATE_DIR = OUT_ROOT / "_state"
 
 SRC_MAP = {
     "STOCKS": SRC_ROOT / "STOCKS",
@@ -35,6 +36,7 @@ OUT_MAP = {
 
 for p in OUT_MAP.values():
     p.mkdir(parents=True, exist_ok=True)
+STATE_DIR.mkdir(parents=True, exist_ok=True)
 
 print("\n MarketForge | OPTIONS MASTER BUILD STARTED")
 
@@ -70,41 +72,42 @@ DEDUP_KEYS = [
 
 SORT_KEYS = DEDUP_KEYS
 
-# ==================================================
-# PROCESS
-# ==================================================
-for seg, src_dir in SRC_MAP.items():
-    out_dir = OUT_MAP[seg]
 
-    files = sorted(src_dir.glob("*.csv"))
-    print(f"\n Processing {seg} | Files: {len(files)}")
+def load_processed(state_file: Path) -> set[str]:
+    if not state_file.exists():
+        return set()
 
-    if not files:
-        continue
+    return {
+        line.strip()
+        for line in state_file.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    }
 
-    # ---------- LOAD ALL DAILY FILES ----------
-    df = pd.concat(
-        (pd.read_csv(f, low_memory=False) for f in files),
-        ignore_index=True
+
+def save_processed(state_file: Path, processed: set[str]) -> None:
+    state_file.write_text(
+        "\n".join(sorted(processed)) + ("\n" if processed else ""),
+        encoding="utf-8",
     )
 
-    # ---------- NORMALIZE COLUMNS ----------
+
+def append_option_daily_file(daily_file: Path, out_dir: Path):
+    df = pd.read_csv(daily_file, low_memory=False)
+
     df.columns = (
         df.columns.astype(str)
         .str.strip()
         .str.upper()
     )
 
-    # ---------- VALIDATE CONTRACT ----------
     missing = set(FINAL_COLS) - set(df.columns)
     if missing:
-        raise RuntimeError(f"Missing columns in {seg}: {sorted(missing)}")
+        raise RuntimeError(f"Missing columns in {daily_file.name}: {sorted(missing)}")
 
     df = df[FINAL_COLS]
 
-    # ---------- STRICT TYPE ENFORCEMENT ----------
     df["TRADE_DATE"] = pd.to_numeric(df["TRADE_DATE"], errors="coerce").astype("Int64")
-    df["EXP_DATE"]   = pd.to_numeric(df["EXP_DATE"], errors="coerce").astype("Int64")
+    df["EXP_DATE"] = pd.to_numeric(df["EXP_DATE"], errors="coerce").astype("Int64")
     df["STRIKE_PRICE"] = pd.to_numeric(df["STRIKE_PRICE"], errors="coerce").astype("int64")
 
     float_cols = [
@@ -135,18 +138,17 @@ for seg, src_dir in SRC_MAP.items():
         df["SYMBOL"].notna()
     ]
 
-    # ---------- PER SYMBOL APPEND ----------
     for symbol, g in df.groupby("SYMBOL", sort=False):
         g = g.sort_values(SORT_KEYS)
 
         csv_out = out_dir / f"{symbol}.csv"
-        pq_out  = out_dir / f"{symbol}.parquet"
+        pq_out = out_dir / f"{symbol}.parquet"
 
         if csv_out.exists():
             old = pd.read_csv(csv_out, low_memory=False)
 
             old["TRADE_DATE"] = pd.to_numeric(old["TRADE_DATE"], errors="coerce").astype("Int64")
-            old["EXP_DATE"]   = pd.to_numeric(old["EXP_DATE"], errors="coerce").astype("Int64")
+            old["EXP_DATE"] = pd.to_numeric(old["EXP_DATE"], errors="coerce").astype("Int64")
             old["STRIKE_PRICE"] = pd.to_numeric(old["STRIKE_PRICE"], errors="coerce").astype("int64")
 
             merged = (
@@ -159,6 +161,33 @@ for seg, src_dir in SRC_MAP.items():
 
         merged.to_csv(csv_out, index=False)
         merged.to_parquet(pq_out, index=False)
+
+# ==================================================
+# PROCESS
+# ==================================================
+for seg, src_dir in SRC_MAP.items():
+    out_dir = OUT_MAP[seg]
+    state_file = STATE_DIR / f"processed_{seg.lower()}_files.txt"
+    processed = load_processed(state_file)
+
+    files = sorted(src_dir.glob("*.csv"))
+    print(f"\n Processing {seg} | Files: {len(files)}")
+
+    if not files:
+        continue
+
+    updated = False
+    for daily_file in files:
+        if daily_file.name in processed:
+            print(f"  Skipping already appended {daily_file.name}")
+            continue
+        print(f"  Appending {daily_file.name}")
+        append_option_daily_file(daily_file, out_dir)
+        processed.add(daily_file.name)
+        updated = True
+
+    if updated:
+        save_processed(state_file, processed)
 
     print(f" {seg} OPTIONS MASTER UPDATED → {out_dir}")
 

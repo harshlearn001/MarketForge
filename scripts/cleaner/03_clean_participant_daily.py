@@ -65,6 +65,11 @@ if df.empty:
 # ==============================
 date_str = latest.name.split("_")[-1].replace(".csv", "")
 date_fmt = pd.to_datetime(date_str, format="%d%m%Y").strftime("%Y-%m-%d")
+out_file = CLEAN_DIR / f"participant_clean_{date_fmt}.csv"
+
+if out_file.exists():
+    print(f" Already cleaned, skipping → {out_file.name}")
+    exit()
 
 df["date"] = date_fmt
 
@@ -127,7 +132,6 @@ if df.empty:
 # ==============================
 # SAVE
 # ==============================
-out_file = CLEAN_DIR / f"participant_clean_{date_fmt}.csv"
 df.to_csv(out_file, index=False)
 
 print("\n📊 CLEAN PREVIEW:")

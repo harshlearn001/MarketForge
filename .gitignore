@@ -4,13 +4,29 @@
 __pycache__/
 *.py[cod]
 *.pyd
+*.pyo
+*.so
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.nox/
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+build/
+dist/
+*.egg-info/
 
 # =====================
 # Environments
 # =====================
 .env
+.env.*
 .venv
 env/
+venv/
 TradeSense/
 
 # =====================
@@ -29,5 +45,6 @@ logs/
 # OS / Editor
 # =====================
 .vscode/
+.idea/
 .DS_Store
 Thumbs.db

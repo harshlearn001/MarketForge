@@ -18,7 +18,8 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[2]   # H:\MarketForge
 
 SRC_DIR = ROOT / "data" / "raw" / "equity"
-OUT_DIR = ROOT / "data" / "unzip_daily" / "equty_daily_unzip"
+OUT_DIR = ROOT / "data" / "unzip_daily" / "equity_daily_unzip"
+OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 print(f"ZIP source : {SRC_DIR}")
 

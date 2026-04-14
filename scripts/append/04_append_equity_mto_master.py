@@ -23,10 +23,40 @@ import sys
 ROOT = Path(r"H:\MarketForge")
 
 DAILY_DIR  = ROOT / "data" / "processed" / "equityDat_daily"
-MASTER_DIR = ROOT / "data" / "master" / "EqiutyDat_master"
+MASTER_DIR = next(
+    (
+        p for p in [
+            ROOT / "data" / "master" / "EquityDat_master",
+            ROOT / "data" / "master" / "EqiutyDat_master",
+        ]
+        if p.exists()
+    ),
+    ROOT / "data" / "master" / "EquityDat_master",
+)
+STATE_DIR = MASTER_DIR / "_state"
+STATE_FILE = STATE_DIR / "processed_mto_files.txt"
 
 if not MASTER_DIR.exists():
     raise RuntimeError(" Master folder does not exist")
+STATE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def load_processed(state_file: Path) -> set[str]:
+    if not state_file.exists():
+        return set()
+
+    return {
+        line.strip()
+        for line in state_file.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    }
+
+
+def save_processed(state_file: Path, processed: set[str]) -> None:
+    state_file.write_text(
+        "\n".join(sorted(processed)) + ("\n" if processed else ""),
+        encoding="utf-8",
+    )
 
 # ==================================================
 # FIND LATEST DAILY FILE
@@ -43,6 +73,11 @@ if not files:
 
 DAILY_FILE = files[0]
 print(f"Using daily file: {DAILY_FILE.name}")
+
+processed_files = load_processed(STATE_FILE)
+if DAILY_FILE.name in processed_files:
+    print(f" Already appended, skipping → {DAILY_FILE.name}")
+    sys.exit(0)
 
 # ==================================================
 # LOAD DAILY
@@ -131,3 +166,6 @@ for symbol, g in df.groupby("SYMBOL"):
 print("\n SYMBOLWISE EQUITY MTO APPEND COMPLETED")
 print(f" Master folder : {MASTER_DIR}")
 print(f" Symbols updated : {symbols_updated}")
+
+processed_files.add(DAILY_FILE.name)
+save_processed(STATE_FILE, processed_files)

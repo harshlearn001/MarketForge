@@ -14,6 +14,8 @@ MarketForge | CLEAN NSE INDEX OHLC (FILTERED + FINAL)
 """
 
 from pathlib import Path
+from datetime import datetime
+import re
 import pandas as pd
 
 # ==================================================
@@ -22,6 +24,10 @@ import pandas as pd
 RAW_DIR = Path(r"H:\MarketForge\data\raw\indices")
 OUT_DIR = Path(r"H:\MarketForge\data\processed\indices_daily")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
+ROOT = Path(r"H:\MarketForge")
+EQUITY_RAW_DIR = ROOT / "data" / "raw" / "equity"
+FUTURES_RAW_DIR = ROOT / "data" / "raw" / "futures"
+MTO_RAW_DIR = ROOT / "data" / "raw" / "equityDat"
 
 # ==================================================
 # TARGET INDICES (CONTROL PANEL)
@@ -52,17 +58,74 @@ TARGET_INDICES = {
     "INDIA VIX",
 }
 
+
+def latest_date_from_files(folder: Path, pattern: str, date_format: str):
+    dates = []
+    for path in folder.glob(pattern):
+        match = re.search(r"(\d{8})", path.name)
+        if not match:
+            continue
+        try:
+            dates.append(datetime.strptime(match.group(1), date_format).date())
+        except ValueError:
+            continue
+    return max(dates) if dates else None
+
+
+def latest_fully_published_trade_date():
+    equity_date = latest_date_from_files(
+        EQUITY_RAW_DIR,
+        "BhavCopy_NSE_CM_*.zip",
+        "%Y%m%d",
+    )
+    futures_date = latest_date_from_files(
+        FUTURES_RAW_DIR,
+        "fo*.zip",
+        "%d%m%Y",
+    )
+    mto_date = latest_date_from_files(
+        MTO_RAW_DIR,
+        "MTO_*.DAT",
+        "%d%m%Y",
+    )
+
+    available = [d for d in [equity_date, futures_date, mto_date] if d is not None]
+    if len(available) < 3:
+        return None
+
+    return min(available)
+
 # ==================================================
 # PICK LATEST FILE
 # ==================================================
+raw_files = list(RAW_DIR.glob("indices_ohlc_eod_*.csv"))
+if not raw_files:
+    raise RuntimeError("No raw index OHLC files found")
+
+published_trade_date = latest_fully_published_trade_date()
+if published_trade_date is not None:
+    raw_files = [
+        p for p in raw_files
+        if re.search(r"(\d{8})", p.name)
+        and datetime.strptime(re.search(r"(\d{8})", p.name).group(1), "%Y%m%d").date() <= published_trade_date
+    ]
+
+if not raw_files:
+    raise RuntimeError("No aligned raw index OHLC files found")
+
 latest_file = max(
-    RAW_DIR.glob("indices_ohlc_eod_*.csv"),
-    key=lambda p: p.stat().st_mtime
+    raw_files,
+    key=lambda p: datetime.strptime(re.search(r"(\d{8})", p.name).group(1), "%Y%m%d")
 )
 
 OUT_FILE = OUT_DIR / latest_file.name.replace(
     "indices_ohlc_eod_", "indices_ohlc_clean_"
 )
+
+if OUT_FILE.exists():
+    print(f"📊 Processing: {latest_file.name}")
+    print(f" Already cleaned, skipping → {OUT_FILE.name}")
+    raise SystemExit(0)
 
 print(f"📊 Processing: {latest_file.name}")
 

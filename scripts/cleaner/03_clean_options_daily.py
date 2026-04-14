@@ -213,18 +213,26 @@ for file in files:
     optstk = opt[opt["INSTRUMENT"].str.startswith("OPTSTK")]
     optidx = opt[opt["INSTRUMENT"].str.startswith("OPTIDX")]
 
-    if not optstk.empty:
-        out = OUT_OPT_STK / f"optstk{tag}.csv"
+    out_stk = OUT_OPT_STK / f"optstk{tag}.csv"
+    out_idx = OUT_OPT_IDX / f"optidx{tag}.csv"
+
+    need_stk = not optstk.empty and not out_stk.exists()
+    need_idx = not optidx.empty and not out_idx.exists()
+
+    if not need_stk and not need_idx:
+        print(" Already cleaned for this trade date — skipped")
+        continue
+
+    if need_stk:
         optstk.sort_values(
             ["SYMBOL", "EXP_DATE", "STRIKE_PRICE", "OPT_TYPE"]
-        ).to_csv(out, index=False)
-        print(f"Saved → {out}")
+        ).to_csv(out_stk, index=False)
+        print(f"Saved → {out_stk}")
 
-    if not optidx.empty:
-        out = OUT_OPT_IDX / f"optidx{tag}.csv"
+    if need_idx:
         optidx.sort_values(
             ["SYMBOL", "EXP_DATE", "STRIKE_PRICE", "OPT_TYPE"]
-        ).to_csv(out, index=False)
-        print(f" Saved → {out}")
+        ).to_csv(out_idx, index=False)
+        print(f" Saved → {out_idx}")
 
 print("\n OPTIONS DAILY SPLIT COMPLETED (LOCKED, STANDARD & ZERO WARNINGS)")

@@ -24,8 +24,11 @@ ROOT = Path(r"H:\MarketForge")
 
 IN_DIR = ROOT / "data" / "processed" / "equity_daily"
 OUT_DIR = ROOT / "data" / "master" / "Equity_stock_master"
+STATE_DIR = OUT_DIR / "_state"
+STATE_FILE = STATE_DIR / "processed_equity_files.txt"
 
 OUT_DIR.mkdir(parents=True, exist_ok=True)
+STATE_DIR.mkdir(parents=True, exist_ok=True)
 
 # ==================================================
 # REMOVE ANY EXISTING PARQUET FILES (HARD POLICY)
@@ -33,6 +36,24 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 for p in OUT_DIR.glob("*.parquet"):
     p.unlink()
     print(f"Removed parquet file: {p.name}")
+
+
+def load_processed(state_file: Path) -> set[str]:
+    if not state_file.exists():
+        return set()
+
+    return {
+        line.strip()
+        for line in state_file.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    }
+
+
+def save_processed(state_file: Path, processed: set[str]) -> None:
+    state_file.write_text(
+        "\n".join(sorted(processed)) + ("\n" if processed else ""),
+        encoding="utf-8",
+    )
 
 # ==================================================
 # DISCOVER LATEST CLEANED EQUITY FILE
@@ -49,6 +70,11 @@ if not files:
 
 csv_file = files[0]
 print(f" Using cleaned file: {csv_file.name}")
+
+processed_files = load_processed(STATE_FILE)
+if csv_file.name in processed_files:
+    print(f" Already appended, skipping → {csv_file.name}")
+    sys.exit(0)
 
 # ==================================================
 # LOAD CLEAN DATA
@@ -164,3 +190,6 @@ for symbol, g in df.groupby("SYMBOL"):
 
 print("\n EQUITY STOCK MASTER UPDATED (CSV ONLY)")
 print(f" Output path: {OUT_DIR}")
+
+processed_files.add(csv_file.name)
+save_processed(STATE_FILE, processed_files)

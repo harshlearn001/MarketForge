@@ -20,6 +20,7 @@ print("📊 APPENDING FII/DII MASTER (INCREMENTAL)...\n")
 # ==============================
 CLEAN_DIR = Path(r"H:\MarketForge\data\processed\fii_dii\clean")
 MASTER_FILE = Path(r"H:\MarketForge\data\master\fii_dii\fii_dii_master.csv")
+MASTER_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 clean_files = sorted(CLEAN_DIR.glob("fii_dii_clean_*.csv"))
 

@@ -18,7 +18,16 @@ ROOT = Path(r"H:\MarketForge\data\master")
 
 MASTER_PATHS = {
     "EQUITY_STOCK": ROOT / "Equity_stock_master",
-    "EQUITY_MTO": ROOT / "EqiutyDat_master",
+    "EQUITY_MTO": next(
+        (
+            p for p in [
+                ROOT / "EquityDat_master",
+                ROOT / "EqiutyDat_master",
+            ]
+            if p.exists()
+        ),
+        ROOT / "EquityDat_master",
+    ),
     "FUTURES_STK": ROOT / "Futures_master" / "FUTSTK",
     "FUTURES_IDX": ROOT / "Futures_master" / "FUTIDX",
     "OPTIONS_STK": ROOT / "option_master" / "STOCKS",
