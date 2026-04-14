@@ -43,7 +43,14 @@ Run-Step "Download MTO Data" `
 
 Run-Step "Download Index OHLC" `
     "$BASE\downloader\01_download_indices_ohlc_auto.py"
+# --------------------------------------------------
+# DOWNLOAD (INSTITUTIONAL DATA)
+# --------------------------------------------------
+Run-Step "Download FII/DII Activity" `
+    "$BASE\downloader\01_download_fii_dii_activity.py"
 
+Run-Step "Download Participant Data" `
+    "$BASE\downloader\01_download_participant_data.py"
 # --------------------------------------------------
 # UNZIP
 # --------------------------------------------------
@@ -71,6 +78,11 @@ Run-Step "Clean MTO Daily" `
 Run-Step "Clean Index OHLC" `
     "$BASE\cleaner\03_clean_indices_ohlc.py"
 
+Run-Step "Clean FII/DII Data" `
+    "$BASE\cleaner\03_clean_fii_dii_daily.py"
+
+Run-Step "Clean Participant Data" `
+    "$BASE\cleaner\03_clean_participant_daily.py"
 # --------------------------------------------------
 # APPEND / BUILD MASTERS
 # --------------------------------------------------
@@ -89,6 +101,12 @@ Run-Step "Append Options Master" `
 Run-Step "Append Index OHLC Master (NIFTY)" `
     "$BASE\append\04_append_indices_ohlc_master.py"
 
+
+Run-Step "Append FII/DII Master" `
+    "$BASE\append\04_append_fii_dii_master.py"
+
+Run-Step "Append Participant Master" `
+    "$BASE\append\04_append_participant_master.py"
 # --------------------------------------------------
 # DONE
 # --------------------------------------------------

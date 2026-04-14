@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 """
-MarketForge | APPEND NIFTY → MASTER_NIFTY (LOCKED)
+MarketForge | APPEND INDICES → INDIVIDUAL FILES (FINAL FIXED)
 
-✔ Uses standardized index OHLC
-✔ Filters NIFTY 50 (authoritative)
+✔ One CSV per index
 ✔ TRADE_DATE = YYYYMMDD (int)
-✔ Schema locked
+✔ SYMBOL column fixed (no blanks)
+✔ Old blank SYMBOL fixed
+✔ Column order enforced
 ✔ Append-safe & duplicate-safe
-✔ CSV ONLY (index master)
 """
 
 from pathlib import Path
@@ -24,72 +24,109 @@ CLEAN_DIR = ROOT / "data" / "processed" / "indices_daily"
 MASTER_DIR = ROOT / "data" / "master" / "Indices_master"
 MASTER_DIR.mkdir(parents=True, exist_ok=True)
 
-MASTER_FILE = MASTER_DIR / "master_nifty.csv"
+# ==================================================
+# TARGET INDICES (CONTROL)
+# ==================================================
+TARGET_INDICES = {
+    "NIFTY 50": "NIFTY",
+    "NIFTY BANK": "BANKNIFTY",
+    "NIFTY NEXT 50": "NIFTYNEXT50",
+    "INDIA VIX": "VIX",
+
+    # sector
+    "NIFTY IT": "NIFTYIT",
+    "NIFTY FMCG": "NIFTYFMCG",
+    "NIFTY AUTO": "NIFTYAUTO",
+    "NIFTY METAL": "NIFTYMETAL",
+    "NIFTY PHARMA": "NIFTYPHARMA",
+    "NIFTY REALTY": "NIFTYREALTY",
+}
 
 # ==================================================
-# PICK LATEST CLEAN INDEX FILE
+# PICK LATEST CLEAN FILE
 # ==================================================
 daily_file = max(
     CLEAN_DIR.glob("indices_ohlc_clean_*.csv"),
     key=lambda p: p.stat().st_mtime
 )
 
-print(f" Daily file : {daily_file.name}")
+print(f"📊 Daily file : {daily_file.name}")
 
 # ==================================================
-# LOAD DAILY CLEAN
+# LOAD DAILY
 # ==================================================
 daily = pd.read_csv(daily_file, low_memory=False)
 
 # ==================================================
-# FILTER NIFTY 50 (AUTHORITATIVE)
+# FILTER REQUIRED INDICES
 # ==================================================
-daily = daily[daily["INDEX_NAME"] == "NIFTY 50"]
+daily = daily[daily["INDEX_NAME"].isin(TARGET_INDICES.keys())]
 
 if daily.empty:
-    raise RuntimeError(" No NIFTY 50 data found in daily index file")
+    raise RuntimeError("❌ No matching indices found")
 
 # ==================================================
-# MAP → MASTER_NIFTY SCHEMA
+# PROCESS EACH INDEX
 # ==================================================
-mapped = pd.DataFrame({
-    "TRADE_DATE": daily["TRADE_DATE"].astype("int64"),
-    "SYMBOL": "NIFTY",
-    "OPEN": daily["OPEN"].astype("float64"),
-    "HIGH": daily["HIGH"].astype("float64"),
-    "LOW": daily["LOW"].astype("float64"),
-    "CLOSE": daily["CLOSE"].astype("float64"),
-})
+for index_name, symbol in TARGET_INDICES.items():
 
-# ==================================================
-# LOAD OR INIT MASTER
-# ==================================================
-if MASTER_FILE.exists():
-    master = pd.read_csv(MASTER_FILE, low_memory=False)
+    df_idx = daily[daily["INDEX_NAME"] == index_name]
 
-    master["TRADE_DATE"] = master["TRADE_DATE"].astype("int64")
-else:
-    master = pd.DataFrame(columns=mapped.columns)
+    if df_idx.empty:
+        print(f"⚠ Skipping {symbol} (not in today file)")
+        continue
 
-# ==================================================
-# APPEND + TRUE DEDUPE
-# ==================================================
-combined = (
-    pd.concat([master, mapped], ignore_index=True)
-    .drop_duplicates(subset=["TRADE_DATE", "SYMBOL"], keep="last")
-    .sort_values("TRADE_DATE")
-    .reset_index(drop=True)
-)
+    # ==================================================
+    # MAP SCHEMA (🔥 SYMBOL INCLUDED)
+    # ==================================================
+    mapped = pd.DataFrame({
+        "TRADE_DATE": df_idx["TRADE_DATE"].astype("int64"),
+        "SYMBOL": symbol,
+        "OPEN": df_idx["OPEN"].astype("float64"),
+        "HIGH": df_idx["HIGH"].astype("float64"),
+        "LOW": df_idx["LOW"].astype("float64"),
+        "CLOSE": df_idx["CLOSE"].astype("float64"),
+    })
 
-# ==================================================
-# SAVE
-# ==================================================
-combined.to_csv(MASTER_FILE, index=False)
+    file_path = MASTER_DIR / f"{symbol}.csv"
 
-print("\n NIFTY MASTER APPEND COMPLETED (LOCKED)")
-print(f" Master file : {MASTER_FILE}")
-print(f" Total rows : {len(combined)}")
-print(
-    f" Date range : "
-    f"{combined['TRADE_DATE'].min()} → {combined['TRADE_DATE'].max()}"
-)
+    # ==================================================
+    # LOAD EXISTING
+    # ==================================================
+    if file_path.exists():
+        master = pd.read_csv(file_path, low_memory=False)
+
+        master["TRADE_DATE"] = master["TRADE_DATE"].astype("int64")
+
+        # 🔥 FIX OLD BLANK SYMBOL
+        if "SYMBOL" in master.columns:
+            master["SYMBOL"] = master["SYMBOL"].fillna(symbol)
+
+    else:
+        master = pd.DataFrame(columns=mapped.columns)
+
+    # ==================================================
+    # APPEND + DEDUPE
+    # ==================================================
+    combined = (
+        pd.concat([master, mapped], ignore_index=True)
+        .drop_duplicates(subset=["TRADE_DATE"], keep="last")
+        .sort_values("TRADE_DATE")
+        .reset_index(drop=True)
+    )
+
+    # ==================================================
+    # FORCE COLUMN ORDER (🔥 IMPORTANT)
+    # ==================================================
+    combined = combined[
+        ["TRADE_DATE", "SYMBOL", "OPEN", "HIGH", "LOW", "CLOSE"]
+    ]
+
+    # ==================================================
+    # SAVE
+    # ==================================================
+    combined.to_csv(file_path, index=False)
+
+    print(f"✅ Updated {symbol} → {len(combined)} rows")
+
+print("\n🚀 ALL INDICES UPDATED SUCCESSFULLY")
