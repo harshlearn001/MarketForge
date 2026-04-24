@@ -1,5 +1,5 @@
 # =====================
-# Python
+# PYTHON
 # =====================
 __pycache__/
 *.py[cod]
@@ -20,29 +20,44 @@ dist/
 *.egg-info/
 
 # =====================
-# Environments
+# ENVIRONMENTS
 # =====================
 .env
 .env.*
-.venv
+.venv/
 env/
 venv/
 TradeSense/
 
 # =====================
-# DATA (ABSOLUTELY IGNORE ALL DATA)
+# DATA (IGNORE FILES, KEEP STRUCTURE)
 # =====================
-data/
+data/**/*.csv
+data/**/*.parquet
+data/**/*.xlsx
+
+# Keep folder structure
+!data/
 !data/.gitkeep
+!data/master/
+!data/master/**/
+!data/raw/
+!data/raw/**/
 
 # =====================
-# Logs
+# LOGS
 # =====================
 logs/
 *.log
 
 # =====================
-# OS / Editor
+# TEMP FILES
+# =====================
+*.tmp
+*.bak
+
+# =====================
+# OS / EDITOR
 # =====================
 .vscode/
 .idea/

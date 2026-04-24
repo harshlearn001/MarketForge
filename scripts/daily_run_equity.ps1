@@ -107,6 +107,9 @@ Run-Step "Append FII/DII Master" `
 
 Run-Step "Append Participant Master" `
     "$BASE\append\04_append_participant_master.py"
+
+Run-Step "Append Futures_master_three_expiries" `
+    "$BASE\append\04_append_futures_master_three_expiries.py"
 # --------------------------------------------------
 # DONE
 # --------------------------------------------------

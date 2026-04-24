@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 """
-MarketForge | NIFTY 500 SYMBOL LIST DOWNLOADER (NSE SAFE)
+MarketForge | NIFTY 500 SYMBOL LIST DOWNLOADER (PRO)
 
-✔ Browser headers
-✔ Session-based
-✔ Retry-safe
-✔ Saves clean CSV
+✔ NSE safe
+✔ Clean symbols
+✔ Deduplicated
+✔ Ready for system integration
 """
 
 import requests
@@ -21,62 +21,73 @@ import time
 # --------------------------------------------------
 OUT_DIR = Path(r"H:\MarketForge\data\master")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
+
 OUT_FILE = OUT_DIR / "nifty_500_symbols.csv"
 
 # --------------------------------------------------
-# URL (OFFICIAL)
+# URL
 # --------------------------------------------------
 URL = "https://www.niftyindices.com/IndexConstituent/ind_nifty500list.csv"
 
 # --------------------------------------------------
-# NSE SAFE HEADERS
+# HEADERS
 # --------------------------------------------------
 HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/120.0.0.0 Safari/537.36"
-    ),
-    "Accept": "text/csv,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9",
+    "User-Agent": "Mozilla/5.0",
+    "Accept": "text/csv,*/*",
     "Referer": "https://www.niftyindices.com/",
-    "Connection": "keep-alive",
 }
 
 # --------------------------------------------------
-# DOWNLOAD USING SESSION
+# SESSION
 # --------------------------------------------------
 session = requests.Session()
 session.headers.update(HEADERS)
 
-# warm-up request (CRITICAL for NSE)
+# warm-up
 session.get("https://www.niftyindices.com", timeout=10)
 time.sleep(1)
 
+# download
 resp = session.get(URL, timeout=15)
 resp.raise_for_status()
 
 # --------------------------------------------------
-# LOAD CSV
+# LOAD DATA
 # --------------------------------------------------
 df = pd.read_csv(StringIO(resp.text))
 
-# normalize column names
-df.columns = (
-    df.columns
-      .str.strip()
-      .str.upper()
+# normalize columns
+df.columns = df.columns.str.strip().str.upper()
+
+# detect symbol column
+symbol_col = [c for c in df.columns if "SYMBOL" in c][0]
+
+symbols = (
+    df[symbol_col]
+    .astype(str)
+    .str.strip()
+    .str.upper()
 )
 
-# keep only symbol column (safe)
-symbol_col = [c for c in df.columns if "SYMBOL" in c][0]
-out = df[[symbol_col]].rename(columns={symbol_col: "SYMBOL"})
+# --------------------------------------------------
+# CLEAN SYMBOLS
+# --------------------------------------------------
+symbols = symbols[
+    (symbols != "") &
+    (symbols != "NAN") &
+    (symbols.str.len() > 0)
+]
+
+# remove duplicates
+symbols = sorted(symbols.unique())
 
 # --------------------------------------------------
 # SAVE
 # --------------------------------------------------
+out = pd.DataFrame(symbols, columns=["SYMBOL"])
 out.to_csv(OUT_FILE, index=False)
 
-print("✅ NIFTY 500 SYMBOL LIST DOWNLOADED")
+print("✅ NIFTY 500 SYMBOL LIST DOWNLOADED (CLEAN)")
 print(f"📄 Symbols : {len(out)}")
 print(f"📁 Saved  : {OUT_FILE}")
