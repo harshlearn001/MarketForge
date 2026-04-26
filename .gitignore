@@ -30,19 +30,9 @@ venv/
 TradeSense/
 
 # =====================
-# DATA (IGNORE FILES, KEEP STRUCTURE)
+# DATA (IGNORE ALL DATA FILES)
 # =====================
-data/**/*.csv
-data/**/*.parquet
-data/**/*.xlsx
-
-# Keep folder structure
-!data/
-!data/.gitkeep
-!data/master/
-!data/master/**/
-!data/raw/
-!data/raw/**/
+data/
 
 # =====================
 # LOGS
