@@ -1,14 +1,26 @@
+# ===============================
+# MARKETFORGE MASTER PIPELINE (FINAL PRO++)
+# ===============================
+
 Write-Host "====================================="
 Write-Host " MarketForge | DAILY EQUITY PIPELINE"
 Write-Host (" Start Time : {0}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"))
 Write-Host "====================================="
 
 # --------------------------------------------------
-# ENV
+# ENV (FIXED PYTHON PATH)
 # --------------------------------------------------
-$PYTHON = "python"
+$PYTHON = "H:\envs\trading_env\Scripts\python.exe"
 $BASE   = "H:\MarketForge\scripts"
 
+if (!(Test-Path $PYTHON)) {
+    Write-Host "[ERROR] Python not found: $PYTHON" -ForegroundColor Red
+    exit 1
+}
+
+# --------------------------------------------------
+# FUNCTION: SAFE RUN STEP
+# --------------------------------------------------
 function Run-Step {
     param (
         [string]$Title,
@@ -19,14 +31,24 @@ function Run-Step {
     Write-Host ("STEP : {0}" -f $Title)
     Write-Host "-------------------------------------"
 
-    & $PYTHON $ScriptPath
-
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host ("FAILED : {0}" -f $Title)
+    if (!(Test-Path $ScriptPath)) {
+        Write-Host "[ERROR] Script not found: $ScriptPath" -ForegroundColor Red
         exit 1
     }
 
-    Write-Host ("DONE   : {0}" -f $Title)
+    $stepStart = Get-Date
+
+    & $PYTHON $ScriptPath
+
+    $stepEnd = Get-Date
+    $timeTaken = [int]($stepEnd - $stepStart).TotalSeconds
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ("FAILED : {0}" -f $Title) -ForegroundColor Red
+        exit 1
+    }
+
+    Write-Host ("DONE   : {0} (Time: {1}s)" -f $Title, $timeTaken) -ForegroundColor Green
 }
 
 # --------------------------------------------------
@@ -43,14 +65,13 @@ Run-Step "Download MTO Data" `
 
 Run-Step "Download Index OHLC" `
     "$BASE\downloader\01_download_indices_ohlc_auto.py"
-# --------------------------------------------------
-# DOWNLOAD (INSTITUTIONAL DATA)
-# --------------------------------------------------
+
 Run-Step "Download FII/DII Activity" `
     "$BASE\downloader\01_download_fii_dii_activity.py"
 
 Run-Step "Download Participant Data" `
     "$BASE\downloader\01_download_participant_data.py"
+
 # --------------------------------------------------
 # UNZIP
 # --------------------------------------------------
@@ -83,8 +104,9 @@ Run-Step "Clean FII/DII Data" `
 
 Run-Step "Clean Participant Data" `
     "$BASE\cleaner\03_clean_participant_daily.py"
+
 # --------------------------------------------------
-# APPEND / BUILD MASTERS
+# APPEND / BUILD MASTER
 # --------------------------------------------------
 Run-Step "Append Equity Stock Master (Symbolwise)" `
     "$BASE\append\04_append_equity_stock_master.py"
@@ -101,7 +123,6 @@ Run-Step "Append Options Master" `
 Run-Step "Append Index OHLC Master (NIFTY)" `
     "$BASE\append\04_append_indices_ohlc_master.py"
 
-
 Run-Step "Append FII/DII Master" `
     "$BASE\append\04_append_fii_dii_master.py"
 
@@ -110,8 +131,39 @@ Run-Step "Append Participant Master" `
 
 Run-Step "Append Futures_master_three_expiries" `
     "$BASE\append\04_append_futures_master_three_expiries.py"
+
 # --------------------------------------------------
-# DONE
+# DATA VALIDATION (FIXED)
+# --------------------------------------------------
+Write-Host "`n[DATA VALIDATION]" -ForegroundColor Cyan
+
+$paths = @(
+    "H:\MarketForge\data\processed\equity_daily",
+    "H:\MarketForge\data\processed\futures_daily",
+    "H:\MarketForge\data\master\Futures_master"
+)
+
+foreach ($p in $paths) {
+    if (Test-Path $p) {
+
+        $file = Get-ChildItem $p -File -Recurse |
+                Where-Object { $_.Extension -eq ".csv" } |
+                Sort-Object LastWriteTime -Descending |
+                Select-Object -First 1
+
+        if ($file) {
+            Write-Host "[OK] $p → $($file.Name) ($($file.LastWriteTime))" -ForegroundColor Green
+        } else {
+            Write-Host "[WARNING] No CSV files found in $p" -ForegroundColor Yellow
+        }
+
+    } else {
+        Write-Host "[ERROR] Missing path $p" -ForegroundColor Red
+    }
+}
+
+# --------------------------------------------------
+# FINAL OUTPUT
 # --------------------------------------------------
 Write-Host ""
 Write-Host "====================================="
