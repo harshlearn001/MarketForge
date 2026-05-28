@@ -3,10 +3,12 @@
 
 """
 MarketForge PRO
-Participant Data Downloader (FINAL)
+Participant Data Downloader (FINAL - PRO)
 
 ✔ Skips weekends
-✔ Handles NSE holiday (no file)
+✔ Handles NSE blocking (session fix)
+✔ Handles NSE holiday (content validation)
+✔ Retry logic (3 attempts)
 ✔ Avoids duplicate download
 ✔ Clean logs
 ✔ Production ready
@@ -15,6 +17,7 @@ Participant Data Downloader (FINAL)
 import requests
 from pathlib import Path
 from datetime import datetime
+import sys
 
 print("📡 DOWNLOADING PARTICIPANT DATA...\n")
 
@@ -37,14 +40,14 @@ file_path = RAW_DIR / f"participant_raw_{today_str}.csv"
 # ==============================
 if today_dt.weekday() >= 5:
     print("📅 Weekend → Market Closed → Skipped")
-    exit()
+    sys.exit()
 
 # ==============================
 # DUPLICATE CHECK
 # ==============================
 if file_path.exists():
     print(f"⏭️ Already downloaded → {file_path.name}")
-    exit()
+    sys.exit()
 
 # ==============================
 # URL
@@ -52,25 +55,51 @@ if file_path.exists():
 url = f"https://archives.nseindia.com/content/nsccl/fao_participant_vol_{today_str}.csv"
 
 # ==============================
-# REQUEST
+# SESSION (IMPORTANT FIX)
 # ==============================
-headers = {
+session = requests.Session()
+session.headers.update({
     "User-Agent": "Mozilla/5.0",
-    "Accept": "text/csv",
     "Referer": "https://www.nseindia.com"
-}
+})
 
 try:
-    r = requests.get(url, headers=headers, timeout=10)
+    # 🔥 Establish session (prevents blocking)
+    session.get("https://www.nseindia.com", timeout=10)
 
-    if r.status_code == 200 and len(r.content) > 100:
-        with open(file_path, "wb") as f:
-            f.write(r.content)
+    success = False
 
-        print(f"✅ Saved → {file_path}")
+    # ==============================
+    # RETRY LOGIC
+    # ==============================
+    for attempt in range(3):
+        try:
+            print(f"🔄 Attempt {attempt+1}...")
 
-    else:
-        print("📅 No data (Holiday / Market Closed) → Skipped")
+            r = session.get(url, timeout=10)
+
+            content = r.content.decode(errors="ignore")
+
+            # ==============================
+            # VALIDATION (HOLIDAY / BLOCK CHECK)
+            # ==============================
+            if r.status_code == 200 and "Client Type" in content:
+
+                with open(file_path, "wb") as f:
+                    f.write(r.content)
+
+                print(f"✅ Saved → {file_path}")
+                success = True
+                break
+
+        except Exception as e:
+            print(f"⚠️ Attempt {attempt+1} failed")
+
+    # ==============================
+    # FINAL STATUS
+    # ==============================
+    if not success:
+        print("📅 No valid data → Holiday / Blocked")
 
 except Exception as e:
     print("❌ Download error:", e)
