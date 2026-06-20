@@ -21,7 +21,7 @@ print("🧹 CLEANING FII/DII DATA...\n")
 # PATHS
 # ==============================
 RAW_DIR = Path(r"H:\MarketForge\data\raw\fii_dii")
-CLEAN_DIR = Path(r"H:\MarketForge\data\processed\fii_dii\clean")
+CLEAN_DIR = Path(r"H:\MarketForge\data\processed\fii_dii")
 CLEAN_DIR.mkdir(parents=True, exist_ok=True)
 
 # ==============================
