@@ -3,7 +3,7 @@
 
 """
 MarketForge PRO
-Participant Daily Data Downloader (v1.2 - Interactive Mode + Smart Lookback)
+Participant Daily Data Downloader (v1.1 - Smart Lookback Engine)
 """
 
 import os
@@ -14,7 +14,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 import holidays
 
-print("📡 INITIALIZING DAILY PARTICIPANT DOWNLOADER (HYBRID INTERACTIVE)...\n")
+print("📡 INITIALIZING DAILY PARTICIPANT DOWNLOADER (SMART LOOKBACK)...\n")
 
 # ==========================================
 # CONFIGURATION & PATHS
@@ -37,56 +37,30 @@ except Exception as e:
     print(f"  ⚠️ Cookie setup warning: {e}")
 
 # ==========================================
-# DATE DETERMINATION INTERFACE
+# LOOKBACK ENGINE LOOP
 # ==========================================
-user_input = input("📅 Enter target date (YYYY-MM-DD) or press [ENTER] for Auto-Lookback: ").strip()
+current_dt = datetime.now()
+INDIAN_HOLIDAYS = holidays.India(years=[current_dt.year])
 
-manual_mode = False
-target_dates_to_try = []
-
-if user_input:
-    try:
-        # Validate and parse the manual date input
-        chosen_dt = datetime.strptime(user_input, "%Y-%m-%d")
-        target_dates_to_try.append(chosen_dt)
-        manual_mode = True
-        print(f"🎯 Manual execution targeted for single date: {user_input}\n")
-    except ValueError:
-        print("❌ Invalid date format! Dropping back into Automated Smart Lookback instead.\n")
-
-if not manual_mode:
-    # Build list of fallback dates for the lookback loop
-    current_dt = datetime.now()
-    max_lookback_days = 7
-    for lookback in range(max_lookback_days):
-        target_dates_to_try.append(current_dt - timedelta(days=lookback))
-
-# Instantiate holiday engine based on the first targeted date asset
-base_year = target_dates_to_try[0].year
-INDIAN_HOLIDAYS = holidays.India(years=[base_year])
-
-# ==========================================
-# CORE DOWNLOAD ENGINE
-# ==========================================
+max_lookback_days = 7
 found_data = False
 
-for idx, target_dt in enumerate(target_dates_to_try):
+for lookback in range(max_lookback_days):
+    target_dt = current_dt - timedelta(days=lookback)
     date_iso = target_dt.strftime("%Y-%m-%d")
     date_str = target_dt.strftime("%d%m%Y")
     
-    # In manual mode, we bypass weekend/holiday skips to let you force-download what you want
-    if not manual_mode:
-        # Skip weekends safely
-        if target_dt.weekday() >= 5:
-            if idx == 0:
-                print(f"箱️  Skipping {date_iso}: Weekend.")
-            continue
-            
-        # Skip official holidays safely
-        if date_iso in INDIAN_HOLIDAYS:
-            if idx == 0:
-                print(f"箱️  Skipping {date_iso}: Market Holiday ({INDIAN_HOLIDAYS.get(date_iso)}).")
-            continue
+    # Skip weekends safely
+    if target_dt.weekday() >= 5:
+        if lookback == 0:
+            print(f"⏭️  Skipping {date_iso}: Weekend.")
+        continue
+        
+    # Skip official holidays safely
+    if date_iso in INDIAN_HOLIDAYS:
+        if lookback == 0:
+            print(f"⏭️  Skipping {date_iso}: Market Holiday ({INDIAN_HOLIDAYS.get(date_iso)}).")
+        continue
 
     print(f"🔄 Checking session availability for date: {date_iso}...")
     
@@ -96,13 +70,13 @@ for idx, target_dt in enumerate(target_dates_to_try):
     vol_path = RAW_DAILY_DIR / vol_filename
     oi_path = RAW_DAILY_DIR / oi_filename
 
-    # If both files already exist locally, no need to waste bandwith/time
+    # If both files already exist locally, no need to redownload
     if vol_path.exists() and oi_path.exists():
         print(f"  ✅ Files already downloaded locally for {date_iso}.\n")
         found_data = True
         break
 
-    # Attempt to download both files for this frame day
+    # Attempt to download both files for this day
     session_success = True
     for file_type in ["VOL", "OI"]:
         url = f"https://archives.nseindia.com/content/nsccl/fao_participant_{file_type.lower()}_{date_str}.csv"
@@ -120,7 +94,7 @@ for idx, target_dt in enumerate(target_dates_to_try):
             else:
                 print(f" -> 404 NOT FOUND")
                 session_success = False
-                break # Break out of the VOL/OI loop
+                break # Break inner loop, try previous calendar day
         except Exception as e:
             print(f" -> ERROR: {e}")
             session_success = False
@@ -131,16 +105,10 @@ for idx, target_dt in enumerate(target_dates_to_try):
         found_data = True
         break
     else:
-        # Cleanup split-fault files to keep processing directories pristine
+        # If files were missing, delete any partial download to keep directory clean
         if vol_path.exists(): vol_path.unlink()
         if oi_path.exists(): oi_path.unlink()
-        
-        if manual_mode:
-            print(f"  ❌ Failed to download files for your requested date {date_iso}.")
-        else:
-            print(f"  ❌ {date_iso} is unavailable. Rolling back to previous date...\n")
+        print(f"  ❌ {date_iso} is unavailable. Rolling back to previous date...\n")
 
-if not found_data and not manual_mode:
-    print(f"🛑 [ABORTED] Tried past lookback window. No active data packages available.")
-elif not found_data and manual_mode:
-    print(f"🛑 [ABORTED] Manual fetch sequence unfulfilled for target date.")
+if not found_data:
+    print(f"🛑 [ABORTED] Tried past {max_lookback_days} days. No active data packages available.")

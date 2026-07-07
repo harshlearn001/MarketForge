@@ -70,7 +70,7 @@ Run-Step "Download FII/DII Activity" `
     "$BASE\downloader\01_download_fii_dii_activity.py"
 
 Run-Step "Download Participant Data" `
-    "$BASE\downloader\01_download_participant_data.py"
+    "$BASE\downloader\01_download_participant_daily_auto.py"
 
 # --------------------------------------------------
 # UNZIP
