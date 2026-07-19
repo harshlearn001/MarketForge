@@ -37,7 +37,7 @@ As of April 14, 2026, the repository has populated masters for:
 - `Futures_master/FUTIDX`
 - `option_master/STOCKS`
 - `option_master/INDICES`
-- `EqiutyDat_master/`
+- `EquityDat_master/`
 - `participant/participant_master.csv`
 - `fii_dii/fii_dii_master.csv`
 

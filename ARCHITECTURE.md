@@ -94,7 +94,7 @@ Current populated master areas:
 - `Futures_master/FUTIDX`
 - `option_master/STOCKS`
 - `option_master/INDICES`
-- `EqiutyDat_master/`
+- `EquityDat_master/`
 - `participant/participant_master.csv`
 - `fii_dii/fii_dii_master.csv`
 
@@ -145,7 +145,7 @@ These state files record which cleaned daily inputs have already been appended.
 - Deduped by trade date, expiry, strike, and option type
 
 ### MTO
-- One CSV per symbol in `EqiutyDat_master`
+- One CSV per symbol in `EquityDat_master`
 - Delivery statistics appended by `TRADE_DATE`
 
 ## Compatibility Notes

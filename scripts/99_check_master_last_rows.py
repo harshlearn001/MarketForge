@@ -22,7 +22,7 @@ MASTER_PATHS = {
         (
             p for p in [
                 ROOT / "EquityDat_master",
-                ROOT / "EqiutyDat_master",
+                
             ]
             if p.exists()
         ),

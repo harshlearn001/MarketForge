@@ -39,7 +39,7 @@ Total Data Objects Tracked: **2 files**
 
 ---
 
-## 📁 Directory Branch: `data\master\EqiutyDat_master`
+## 📁 Directory Branch: `data\master\EquityDat_master`
 Total Data Objects Tracked: **501 files**
 
 ### 🛠️ Table Schema Model (Sample Object: `360ONE.csv`):

@@ -27,7 +27,7 @@ MASTER_DIR = next(
     (
         p for p in [
             ROOT / "data" / "master" / "EquityDat_master",
-            ROOT / "data" / "master" / "EqiutyDat_master",
+            
         ]
         if p.exists()
     ),

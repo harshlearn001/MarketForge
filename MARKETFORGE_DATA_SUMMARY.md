@@ -53,7 +53,7 @@ data/master/
 │   ├── STOCKS/                 ← 293 stock options masters
 │   ├── INDICES/                ← 5 index options masters
 │   └── _state/                 ← Incremental append state
-├── EqiutyDat_master/           ← 501 symbol MTO masters (legacy folder still supported)
+├── EquityDat_master/           ← 501 symbol MTO masters (legacy folder still supported)
 ├── participant/
 │   └── participant_master.csv
 └── fii_dii/
@@ -116,9 +116,9 @@ AAATECH.csv        (0.00 MB)
   - `INDICES/NIFTY.csv` → `TRADE_DATE=20260413`
 
 ### MTO / Delivery Masters
-- **501 symbol delivery masters** in `EqiutyDat_master/`
+- **501 symbol delivery masters** in `EquityDat_master/`
 - Example latest coverage:
-  - `EqiutyDat_master/RELIANCE.csv` → `TRADE_DATE=20260413`
+  - `EquityDat_master/RELIANCE.csv` → `TRADE_DATE=20260413`
 
 ### Institutional and Participant Data
 - `participant_master.csv` latest date: `2026-04-13`
@@ -154,7 +154,7 @@ H:\MarketForge\
 │   │   ├── Futures_master/
 │   │   ├── Indices_master/
 │   │   ├── option_master/
-│   │   ├── EqiutyDat_master/
+│   │   ├── EquityDat_master/
 │   │   ├── participant/
 │   │   └── fii_dii/
 │   │
@@ -296,7 +296,7 @@ data/master/option_master/_state/
 
 ### Known Legacy Quirks
 - Legacy folder typos may still exist on disk:
-  - `data/master/EqiutyDat_master`
+  - `data/master/EquityDat_master`
   - `data/unzip_daily/equty_daily_unzip`
 - Newer code prefers canonical names where possible:
   - `data/master/EquityDat_master`
