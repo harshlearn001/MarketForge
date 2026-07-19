@@ -67,16 +67,16 @@ Run-Step "Download Index OHLC" `
     "$BASE\downloader\01_download_indices_ohlc_auto.py"
 
 Run-Step "Download FII/DII Activity" `
-    "$BASE\downloader\01_download_fii_dii_activity.py"
+    "$BASE\downloader\01_download_fii_dii_activity_auto.py"
 
 Run-Step "Download Participant Data" `
-    "$BASE\downloader\01_download_participant_daily_auto.py"
+    "$BASE\downloader\01_download_participant_auto.py"
 
 # --------------------------------------------------
 # UNZIP
 # --------------------------------------------------
 Run-Step "Unzip CM Bhavcopy" `
-    "$BASE\cleaner\02_unzip_cm_bhavcopy_auto.py"
+    "$BASE\cleaner\02_unzip_cm_bhavcopy_daily.py"
 
 Run-Step "Unzip FO Daily" `
     "$BASE\cleaner\02_unzip_fo_daily.py"
@@ -85,7 +85,7 @@ Run-Step "Unzip FO Daily" `
 # CLEAN
 # --------------------------------------------------
 Run-Step "Clean CM Equity Bhavcopy (EQ ONLY)" `
-    "$BASE\cleaner\03_clean_cm_bhavcopy_daily_auto.py"
+    "$BASE\cleaner\03_clean_cm_bhavcopy_daily.py"
 
 Run-Step "Clean Futures Daily" `
     "$BASE\cleaner\03_clean_futures_daily.py"
@@ -97,7 +97,7 @@ Run-Step "Clean MTO Daily" `
     "$BASE\cleaner\03_clean_mto_daily.py"
 
 Run-Step "Clean Index OHLC" `
-    "$BASE\cleaner\03_clean_indices_ohlc.py"
+    "$BASE\cleaner\03_clean_indices_ohlc_daily.py"
 
 Run-Step "Clean FII/DII Data" `
     "$BASE\cleaner\03_clean_fii_dii_daily.py"

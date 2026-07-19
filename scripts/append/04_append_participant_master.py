@@ -14,7 +14,7 @@ print("📂 INITIALIZING PARTICIPANT HISTORICAL MASTER APPENDER...\n")
 
 # CONFIGURATION - Routing to historical destination directories
 CLEAN_DAILY_DIR      = Path(r"H:/MarketForge/data/processed/participant_daily")
-HISTORICAL_CLEAN_DIR = Path(r"H:/MarketForge/data/processed/participant_historical")
+HISTORICAL_CLEAN_DIR = Path(r"H:/MarketForge/data/historical/participant_historical")
 MASTER_FILE          = HISTORICAL_CLEAN_DIR / "participant_master.csv"
 
 HISTORICAL_CLEAN_DIR.mkdir(parents=True, exist_ok=True)
